@@ -725,7 +725,7 @@ def main():
     omnisci_server = None
 
     parser, args, skip_rows = get_args()
-
+    # print("args: ", args)
     try:
         if not args.no_ibis:
             sys.path.append(os.path.join(os.path.dirname(__file__), ".."))
