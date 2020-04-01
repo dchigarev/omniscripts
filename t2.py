@@ -1,3 +1,6 @@
 import ibis
 
-# pdb.set_trace()
+table = ibis.table([('foo', 'double'), ('bar', 'double')], name='sample')
+df = table.execute()
+print(table)
+print(df)
