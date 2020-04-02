@@ -9,7 +9,7 @@ import numpy as np
 sys.path.append(os.path.join(os.path.dirname(__file__), ".."))
 from utils import (compare_dataframes, files_names_from_pattern,
                    import_pandas_into_module_namespace, load_data_pandas,
-                   print_times)
+                   print_results)
 
 
 def validation_prereqs(
@@ -418,7 +418,7 @@ def etl_pandas(
             filename=f,
             columns_names=columns_names,
             header=0,
-            nrows=1000,
+            nrows=None,
             use_gzip=f.endswith(".gz"),
             parse_dates=["pickup_datetime", "dropoff_datetime",],
             pd=run_benchmark.__globals__["pd"],
@@ -441,7 +441,7 @@ def run_benchmark(parameters):
         "no_ml": parameters["no_ml"],
         "gpu_memory": parameters["gpu_memory"],
     }
-    warnings.warn(f"Parameters {ignored_parameters} are irnored", RuntimeWarning)
+    warnings.warn(f"Parameters {ignored_parameters} are ignored", RuntimeWarning)
 
     parameters["data_file"] = parameters["data_file"].replace("'", "")
 
@@ -580,10 +580,10 @@ def run_benchmark(parameters):
                 validation=parameters["validation"],
             )
 
-            print_times(times=etl_times_ibis, backend="Ibis")
+            print_results(results=etl_times_ibis, backend="Ibis", unit='ms')
             etl_times_ibis["Backend"] = "Ibis"
 
-        pandas_files_limit = 1
+        pandas_files_limit = parameters["dfiles_num"]
         filename = files_names_from_pattern(parameters["data_file"])[
             :pandas_files_limit
         ]
@@ -594,7 +594,7 @@ def run_benchmark(parameters):
             columns_types=columns_types,
         )
 
-        print_times(times=etl_times, backend=parameters["pandas_mode"])
+        print_results(results=etl_times, backend=parameters["pandas_mode"], unit='ms')
         etl_times["Backend"] = parameters["pandas_mode"]
 
         return {"ETL": [etl_times_ibis, etl_times], "ML": []}

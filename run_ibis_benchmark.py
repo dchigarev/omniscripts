@@ -3,6 +3,7 @@ import argparse
 import os
 import sys
 import traceback
+import time
 
 import mysql.connector
 
@@ -26,10 +27,10 @@ def main():
     parser._action_groups.append(optional)
 
     required.add_argument(
-        "-bench_name", dest="bench_name", choices=benchmarks, help="Benchmark name.",
+        "-bench_name", dest="bench_name", choices=benchmarks, help="Benchmark name.", required=True,
     )
     required.add_argument(
-        "-data_file", dest="data_file", help="A datafile that should be loaded.",
+        "-data_file", dest="data_file", help="A datafile that should be loaded.", required=True,
     )
     optional.add_argument(
         "-dfiles_num",
@@ -41,7 +42,7 @@ def main():
     optional.add_argument(
         "-iterations",
         dest="iterations",
-        default=5,
+        default=1,
         type=int,
         help="Number of iterations to run every query. Best result is selected.",
     )
@@ -226,6 +227,7 @@ def main():
     try:
         os.environ["PYTHONIOENCODING"] = "UTF-8"
         os.environ["PYTHONUNBUFFERED"] = "1"
+        omnisci_server_worker = None
 
         args = parser.parse_args()
 
@@ -257,7 +259,6 @@ def main():
             "gpu_memory": args.gpu_memory,
         }
 
-        omnisci_server_worker = None
         if not args.no_ibis:
             if args.executable is None:
                 parser.error(
@@ -282,6 +283,7 @@ def main():
         etl_results = []
         ml_results = []
         print(parameters)
+        run_id = int(round(time.time()))
         for iter_num in range(1, args.iterations + 1):
             print(f"Iteration #{iter_num}")
 
@@ -299,14 +301,16 @@ def main():
             for backend_res in result["ETL"]:
                 if backend_res:
                     backend_res["Iteration"] = iter_num
+                    backend_res["run_id"] = run_id
                     etl_results.append(backend_res)
             for backend_res in result["ML"]:
                 if backend_res:
                     backend_res["Iteration"] = iter_num
+                    backend_res["run_id"] = run_id
                     ml_results.append(backend_res)
 
-           # Reporting to MySQL database
-            if args.db_user is not "":
+            # Reporting to MySQL database
+            if args.db_user is not None:
                 if iter_num == 1:
                     db = mysql.connector.connect(
                         host=args.db_server,
@@ -334,7 +338,7 @@ def main():
                     if len(ml_results) is not 0:
                         reporting_fields_benchmark_ml = {x: "VARCHAR(500) NOT NULL" for x in ml_results[0]}
                         if len(ml_results) is not 1:
-                            reporting_fields_benchmark_etl.update({x: "VARCHAR(500) NOT NULL" for x in ml_results[1]})
+                            reporting_fields_benchmark_ml.update({x: "VARCHAR(500) NOT NULL" for x in ml_results[1]})
 
                         db_reporter_ml = DbReport(
                             db,
@@ -343,12 +347,12 @@ def main():
                             reporting_init_fields
                         )
 
-                for result in etl_results:
-                    db_reporter_etl.submit(result)
+                for result_etl in etl_results:
+                    db_reporter_etl.submit(result_etl)
 
                 if len(ml_results) is not 0:
-                    for result in ml_results:
-                        db_reporter_ml.submit(result)
+                    for result_ml in ml_results:
+                        db_reporter_ml.submit(result_ml)
 
     except Exception:
         traceback.print_exc(file=sys.stdout)
