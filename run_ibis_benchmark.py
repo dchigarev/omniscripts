@@ -193,7 +193,7 @@ def main():
     optional.add_argument(
         "-database_name",
         dest="database_name",
-        default="omnisci",
+        default="test_db",
         help="Database name to use in omniscidb server.",
     )
     optional.add_argument(
