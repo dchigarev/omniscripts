@@ -127,6 +127,13 @@ def etl_ibis(
             table_import.read_csv(filename, header=True, quotechar="", delimiter=",")
             etl_times["t_readcsv"] = round((timer() - t0) * 1000)
 
+            omnisci_server_worker.get_con()._execute(
+                "ALTER TABLE {} ADD COLUMN ID int DEFAULT 0".format(table_name)
+            )
+            omnisci_server_worker.get_con()._execute(
+                "UPDATE {} SET ID = ROWID".format(table_name)
+            )
+
         elif import_mode == "pandas":
             # Datafiles import
             t_import_pandas, t_import_ibis = omnisci_server_worker.import_data_by_ibis(
@@ -197,7 +204,7 @@ def etl_ibis(
         "SEX_HEAD",
     ]
 
-    if import_mode == "pandas" and validation:
+    if validation:
         keep_cols.append("id")
 
     table = table[keep_cols]
@@ -225,7 +232,7 @@ def etl_ibis(
 
     df = table.execute()
 
-    if import_mode == "pandas" and validation:
+    if validation:
         df.index = df['id'].values
 
     # here we use pandas to split table
@@ -486,7 +493,7 @@ def run_benchmark(parameters):
             print_results(results=ml_scores, backend=parameters["pandas_mode"])
             ml_scores["Backend"] = parameters["pandas_mode"]
 
-        if parameters["pandas_mode"] and parameters["validation"]:
+        if parameters["validation"]:
             # this should work only for pandas mode
             compare_dataframes(
                 ibis_dfs=(X_ibis, y_ibis),
