@@ -127,10 +127,10 @@ def etl_ibis(
             table_import.read_csv(filename, header=True, quotechar="", delimiter=",")
             etl_times["t_readcsv"] = round((timer() - t0) * 1000)
 
-            omnisci_server_worker.get_con()._execute(
+            omnisci_server_worker.get_conn()._execute(
                 "ALTER TABLE {} ADD COLUMN ID int DEFAULT 0".format(table_name)
             )
-            omnisci_server_worker.get_con()._execute(
+            omnisci_server_worker.get_conn()._execute(
                 "UPDATE {} SET ID = ROWID".format(table_name)
             )
 
