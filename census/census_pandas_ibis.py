@@ -128,10 +128,10 @@ def etl_ibis(
             etl_times["t_readcsv"] = round((timer() - t0) * 1000)
 
             omnisci_server_worker.get_conn()._execute(
-                "ALTER TABLE {} ADD COLUMN ID int DEFAULT 0".format(table_name)
+                "ALTER TABLE {} ADD COLUMN id int DEFAULT 0".format(table_name)
             )
             omnisci_server_worker.get_conn()._execute(
-                "UPDATE {} SET ID = ROWID".format(table_name)
+                "UPDATE {} SET id = ROWID".format(table_name)
             )
 
         elif import_mode == "pandas":
