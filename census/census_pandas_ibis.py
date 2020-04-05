@@ -131,7 +131,7 @@ def etl_ibis(
                 "ALTER TABLE {} ADD COLUMN id int DEFAULT 0".format(table_name)
             )
             omnisci_server_worker.get_conn()._execute(
-                "UPDATE {} SET id = ROWID".format(table_name)
+                "UPDATE {} SET id = SERIAL".format(table_name)
             )
 
         elif import_mode == "pandas":
