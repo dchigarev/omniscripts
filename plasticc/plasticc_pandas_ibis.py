@@ -522,6 +522,18 @@ def run_benchmark(parameters):
     parameters["data_file"] = parameters["data_file"].replace("'", "")
     skip_rows = compute_skip_rows(parameters["gpu_memory"])
 
+    incompatible_args = [
+        {
+            "__behavior__": "warning",
+            "__finally__": lambda params: params.update({"validation": False}),
+            "validation": True,
+            "import_mode": "copy_from",
+            "import_mode": "fsi",
+        }
+    ]
+
+    check_args_compatibility(parameters, incompatible_args)
+
     dtypes = OrderedDict(
         [
             ("object_id", "int32"),

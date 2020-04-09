@@ -15,6 +15,7 @@ from utils import (
     mse,
     print_results,
     split,
+    check_args_compatibility
 )
 
 warnings.filterwarnings("ignore")
@@ -300,6 +301,18 @@ def run_benchmark(parameters):
 
     parameters["data_file"] = parameters["data_file"].replace("'", "")
 
+    incompatible_args = [
+        {
+            "__behavior__": "warning",
+            "__finally__": lambda params: params.update({"validation": False}),
+            "validation": True,
+            "import_mode": "copy_from",
+            "import_mode": "fsi",
+        }
+    ]
+
+    check_args_compatibility(parameters, incompatible_args)
+
     # ML specific
     N_RUNS = 50
     TEST_SIZE = 0.1
@@ -483,7 +496,7 @@ def run_benchmark(parameters):
                 print_results(results=ml_scores, backend=parameters["pandas_mode"])
                 ml_scores["Backend"] = parameters["pandas_mode"]
 
-        if parameters["validation"] and parameters["import_mode"] == "pandas":
+        if parameters["validation"]:
             # this should work only for pandas mode
             compare_dataframes(
                 ibis_dfs=(X_ibis, y_ibis), pandas_dfs=(X, y),
