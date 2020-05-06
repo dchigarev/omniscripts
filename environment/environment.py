@@ -13,7 +13,7 @@ from utils import (
     execute_process,
 )  # noqa: E402 (module level import not at top of file. Import after sys.path)
 
-
+print("ENV CONFIGURATED")
 class CondaEnvironment:
     "Manage conda environments(create, remove, etc.)"
 
